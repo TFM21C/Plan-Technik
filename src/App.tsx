@@ -24,6 +24,7 @@ export default function App() {
   const [connectingInfo, setConnectingInfo] = React.useState<ConnectingInfo>({ startPinId: null });
   const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
   const [selectedComponentId, setSelectedComponentId] = React.useState<string | null>(null);
+  const [isSimulating, setIsSimulating] = React.useState<boolean>(false); // NEU
   const svgRef = React.useRef<SVGSVGElement>(null);
 
   React.useEffect(() => {
@@ -58,7 +59,14 @@ export default function App() {
   const handleAddComponent = (type: ComponentType) => {
     const newId = `${type.toLowerCase()}-${Date.now()}`;
     const pins = createPinsForComponent(newId, type);
-    const newComponent: CircuitComponent = { id: newId, type, label: newId, position: { x: 150, y: 150 }, pins };
+    let initialState = {} as any; // Standardmäßig leerer Zustand
+    // NEU: Setze den Anfangszustand für Schalter
+    if (type === ComponentType.NormallyOpen) {
+      initialState = { isOpen: true };
+    } else if (type === ComponentType.NormallyClosed) {
+      initialState = { isOpen: false };
+    }
+    const newComponent: CircuitComponent = { id: newId, type, label: newId, position: { x: 150, y: 150 }, pins, state: initialState };
     setState(prevState => ({ ...prevState, components: { ...prevState.components, [newId]: newComponent } }));
   };
 
@@ -73,6 +81,7 @@ export default function App() {
   };
 
   const handleMouseDownOnComponent = (e: React.MouseEvent, componentId: string) => {
+    if (isSimulating) return; // Im Simulationsmodus nicht ziehen
     e.preventDefault();
     setSelectedComponentId(componentId);
     const component = state.components[componentId];
@@ -96,9 +105,14 @@ export default function App() {
 
   const handleMouseUp = () => { setDraggingInfo(null); };
 
-  const handleCanvasClick = () => { if (connectingInfo.startPinId) { setConnectingInfo({ startPinId: null }); } };
+  const handleCanvasClick = () => {
+    if (connectingInfo.startPinId) {
+      setConnectingInfo({ startPinId: null });
+    }
+  };
 
   const handlePinClick = (e: React.MouseEvent, pinId: string) => {
+    if (isSimulating) return; // Im Simulationsmodus keine Verbindungen erstellen
     e.stopPropagation();
     setSelectedComponentId(null);
     if (!connectingInfo.startPinId) {
@@ -108,6 +122,27 @@ export default function App() {
       const newConnectionId = `conn-${connectingInfo.startPinId}-${pinId}`;
       setState(prevState => ({ ...prevState, connections: { ...prevState.connections, [newConnectionId]: { id: newConnectionId, startPinId: connectingInfo.startPinId!, endPinId: pinId } } }));
       setConnectingInfo({ startPinId: null });
+    }
+  };
+
+  // NEU: Schaltet die Simulation an/aus
+  const handleToggleSimulation = () => {
+    setIsSimulating(prev => !prev);
+    setSelectedComponentId(null); // Auswahl bei Moduswechsel aufheben
+  };
+
+  // NEU: Behandelt Klicks auf Bauteile (nur im Simulationsmodus)
+  const handleComponentClick = (e: React.MouseEvent, componentId: string) => {
+    if (!isSimulating) return; // Nur im Simulationsmodus
+
+    e.stopPropagation();
+    const component = state.components[componentId];
+    if (component.type === ComponentType.NormallyOpen || component.type === ComponentType.NormallyClosed) {
+      setState(prevState => {
+        const currentComp = prevState.components[componentId];
+        const newCompState = { ...currentComp.state, isOpen: !currentComp.state?.isOpen };
+        return { ...prevState, components: { ...prevState.components, [componentId]: { ...currentComp, state: newCompState } } };
+      });
     }
   };
 
@@ -146,7 +181,11 @@ export default function App() {
   return (
     <div className="app-container">
       <aside className="palette-container">
-        <Palette onAddComponent={handleAddComponent} />
+        <Palette 
+          onAddComponent={handleAddComponent} 
+          onToggleSimulation={handleToggleSimulation}
+          isSimulating={isSimulating}
+        />
       </aside>
       <main className="canvas-container">
         <CircuitCanvas
@@ -160,15 +199,18 @@ export default function App() {
           onMouseUp={handleMouseUp}
           onCanvasClick={handleCanvasClick}
           connectingInfo={getConnectingInfoForCanvas()}
+          onComponentClick={handleComponentClick} // NEU
         />
       </main>
-      <DetailsSidebar
-        selectedComponent={selectedComponentId ? state.components[selectedComponentId] : null}
-        onDelete={handleDeleteComponent}
-        onClose={() => setSelectedComponentId(null)}
-        onLabelChange={handleLabelChange}
-      />
+      {/* Detail-Seitenleiste im Simulationsmodus ausblenden */}
+      {!isSimulating && (
+        <DetailsSidebar 
+          selectedComponent={selectedComponentId ? state.components[selectedComponentId] : null}
+          onDelete={handleDeleteComponent}
+          onClose={() => setSelectedComponentId(null)}
+          onLabelChange={handleLabelChange}
+        />
+      )}
     </div>
   );
 }
-

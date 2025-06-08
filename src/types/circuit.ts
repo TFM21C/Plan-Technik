@@ -33,6 +33,7 @@ export interface CircuitComponent {
   label: string;                // Die vom Benutzer vergebene Bezeichnung, z.B. 'S1'
   position: { x: number; y: number }; // Die X/Y-Koordinaten auf der Zeichenfläche
   pins: Pin[];                  // Eine Liste der Anschlusspunkte
+  state?: { [key: string]: any }; // NEU: Optionaler Zustand für das Bauteil
 }
 
 /**

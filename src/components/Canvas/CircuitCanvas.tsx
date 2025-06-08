@@ -9,6 +9,7 @@ interface CircuitCanvasProps {
   selectedComponentId: string | null;
   onComponentMouseDown: (e: React.MouseEvent, componentId: string) => void;
   onPinClick: (e: React.MouseEvent, pinId: string) => void;
+  onComponentClick: (e: React.MouseEvent, componentId: string) => void; // NEU
   onMouseMove: (e: React.MouseEvent) => void;
   onMouseUp: () => void;
   onCanvasClick: () => void;
@@ -23,6 +24,7 @@ const CircuitCanvas: React.FC<CircuitCanvasProps> = (props) => {
     selectedComponentId,
     onComponentMouseDown,
     onPinClick,
+    onComponentClick,
     onMouseMove,
     onMouseUp,
     onCanvasClick,
@@ -77,6 +79,7 @@ const CircuitCanvas: React.FC<CircuitCanvasProps> = (props) => {
           isSelected={component.id === selectedComponentId}
           onMouseDown={onComponentMouseDown}
           onPinClick={onPinClick}
+          onComponentClick={onComponentClick}
         />
       ))}
     </svg>
