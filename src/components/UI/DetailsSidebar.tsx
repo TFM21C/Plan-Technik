@@ -1,3 +1,5 @@
+// src/components/UI/DetailsSidebar.tsx
+
 import React from 'react';
 import { CircuitComponent } from '../../types/circuit';
 
