@@ -3,6 +3,7 @@ import './index.css';
 
 import Palette from './components/ComponentPalette/Palette';
 import CircuitCanvas from './components/Canvas/CircuitCanvas';
+import DetailsSidebar from './components/UI/DetailsSidebar';
 import { useCircuitState } from './hooks/useCircuitState';
 import { CircuitComponent, ComponentType, Pin } from './types/circuit';
 
@@ -14,6 +15,7 @@ export default function App() {
   const [draggingInfo, setDraggingInfo] = React.useState<DraggingInfo | null>(null);
   const [connectingInfo, setConnectingInfo] = React.useState<ConnectingInfo>({ startPinId: null });
   const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
+  const [selectedComponentId, setSelectedComponentId] = React.useState<string | null>(null);
 
   // KORREKTUR: Wir brauchen eine Referenz auf unser SVG-Element
   const svgRef = React.useRef<SVGSVGElement>(null);
@@ -41,6 +43,7 @@ export default function App() {
     const mouseCoords = getCoordsInSvg(e);
     const offsetX = mouseCoords.x - component.position.x;
     const offsetY = mouseCoords.y - component.position.y;
+    setSelectedComponentId(componentId);
     setDraggingInfo({ componentId, offsetX, offsetY });
   };
 
@@ -72,6 +75,42 @@ export default function App() {
     }
   };
 
+  const handleDeleteComponent = (componentId: string) => {
+    setState(prevState => {
+      if (!prevState.components[componentId]) return prevState;
+      const { [componentId]: _, ...restComponents } = prevState.components;
+      const componentPins = prevState.components[componentId].pins.map(p => p.id);
+      const newConnections = Object.fromEntries(
+        Object.entries(prevState.connections).filter(
+          ([, conn]) =>
+            !componentPins.includes(conn.startPinId) &&
+            !componentPins.includes(conn.endPinId)
+        )
+      );
+      return { components: restComponents, connections: newConnections };
+    });
+    if (selectedComponentId === componentId) {
+      setSelectedComponentId(null);
+    }
+  };
+
+  const handleLabelChange = (componentId: string, newLabel: string) => {
+    setState(prevState => {
+      if (!prevState.components[componentId]) return prevState;
+      const updatedComponent = {
+        ...prevState.components[componentId],
+        label: newLabel,
+      };
+      return {
+        ...prevState,
+        components: {
+          ...prevState.components,
+          [componentId]: updatedComponent,
+        },
+      };
+    });
+  };
+
   const getConnectingInfoForCanvas = () => {
     if (!connectingInfo.startPinId) return null;
     const startPin = Object.values(state.components).flatMap(c => c.pins).find(p => p.id === connectingInfo.startPinId);
@@ -97,6 +136,13 @@ export default function App() {
           connectingInfo={getConnectingInfoForCanvas()}
         />
       </main>
+
+      <DetailsSidebar
+        selectedComponent={selectedComponentId ? state.components[selectedComponentId] : null}
+        onDelete={handleDeleteComponent}
+        onClose={() => setSelectedComponentId(null)}
+        onLabelChange={handleLabelChange}
+      />
     </div>
   );
 }
