@@ -3,14 +3,17 @@ import { CircuitComponent, ComponentType } from '../../types/circuit';
 
 interface DraggableComponentProps {
   component: CircuitComponent;
+  isSelected: boolean; // NEU
   onMouseDown: (e: React.MouseEvent, componentId: string) => void;
   onPinClick: (e: React.MouseEvent, pinId: string) => void;
 }
 
-const DraggableComponent: React.FC<DraggableComponentProps> = ({ component, onMouseDown, onPinClick }) => {
+const DraggableComponent: React.FC<DraggableComponentProps> = ({ component, isSelected, onMouseDown, onPinClick }) => {
   const renderVisual = () => {
-    const style: React.CSSProperties = { stroke: 'black', strokeWidth: 2, fill: 'none', cursor: 'grab' };
-    const textStyle: React.CSSProperties = { fontSize: '12px', userSelect: 'none' };
+    // NEU: Der Stil ändert sich, wenn das Bauteil ausgewählt ist
+    const strokeColor = isSelected ? '#007bff' : 'black';
+    const style: React.CSSProperties = { stroke: strokeColor, strokeWidth: 2, fill: 'none', cursor: 'grab' };
+    const textStyle: React.CSSProperties = { fontSize: '12px', userSelect: 'none', fill: strokeColor };
 
     switch (component.type) {
       case ComponentType.PowerSource24V:
