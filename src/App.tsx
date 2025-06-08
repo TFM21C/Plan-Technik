@@ -8,62 +8,98 @@ import CircuitCanvas from './components/Canvas/CircuitCanvas';
 import { useCircuitState } from './hooks/useCircuitState';
 import { CircuitComponent, ComponentType } from './types/circuit';
 
+// Ein kleiner Typ für unsere Dragging-Informationen
+interface DraggingInfo {
+  componentId: string;
+  offsetX: number;
+  offsetY: number;
+}
+
 export default function App() {
   const { state, setState } = useCircuitState();
+  // Neuer State, um zu verfolgen, was gerade gezogen wird.
+  const [draggingInfo, setDraggingInfo] = React.useState<DraggingInfo | null>(null);
 
-  // Initialer Zustand mit den Stromschienen.
-  // Wird nur beim ersten Rendern verwendet.
   React.useEffect(() => {
+    // ... (der useEffect zum initialen Setzen der Stromschienen bleibt unverändert)
     setState({
       components: {
-        'power-24v': {
-          id: 'power-24v', type: ComponentType.PowerSource24V, label: '+24V',
-          position: { x: 50, y: 50 }, pins: [],
-        },
-        'power-0v': {
-          id: 'power-0v', type: ComponentType.PowerSource0V, label: '0V',
-          position: { x: 50, y: 600 }, pins: [],
-        },
+        'power-24v': { id: 'power-24v', type: ComponentType.PowerSource24V, label: '+24V', position: { x: 50, y: 50 }, pins: [] },
+        'power-0v': { id: 'power-0v', type: ComponentType.PowerSource0V, label: '0V', position: { x: 50, y: 600 }, pins: [] },
       },
       connections: {},
     });
-  }, [setState]); // Abhängigkeit von setState, um ESLint-Warnungen zu vermeiden
+  }, [setState]);
 
-
-  // Diese Funktion wird von der Palette aufgerufen, um ein neues Bauteil hinzuzufügen.
   const handleAddComponent = (type: ComponentType) => {
-    // Erzeugt eine neue, einzigartige ID für das Bauteil
+    // ... (diese Funktion bleibt unverändert)
     const newId = `${type.toLowerCase()}-${Date.now()}`;
-    
     const newComponent: CircuitComponent = {
-      id: newId,
-      type: type,
-      label: newId, // Vorerst ein einfacher Label
-      position: { x: 150, y: 150 }, // Startposition für neue Bauteile
-      pins: [], // Pin-Logik kommt später
+      id: newId, type: type, label: newId,
+      position: { x: 150, y: 150 }, pins: [],
     };
-
-    // Aktualisiert den Zustand: Behält alle alten Komponenten und fügt die neue hinzu.
     setState(prevState => ({
       ...prevState,
-      components: {
-        ...prevState.components,
-        [newId]: newComponent,
-      },
+      components: { ...prevState.components, [newId]: newComponent },
     }));
+  };
+
+  // --- NEUE FUNKTIONEN FÜR DRAG & DROP ---
+
+  const handleMouseDownOnComponent = (e: React.MouseEvent, componentId: string) => {
+    // Verhindert, dass Text markiert wird etc.
+    e.preventDefault();
+    const component = state.components[componentId];
+    if (!component) return;
+
+    // Berechnet den Klick-Offset relativ zur oberen linken Ecke des Bauteils
+    const offsetX = e.clientX - component.position.x;
+    const offsetY = e.clientY - component.position.y;
+
+    setDraggingInfo({ componentId, offsetX, offsetY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    // Nur wenn wir gerade ein Bauteil ziehen...
+    if (draggingInfo) {
+      const { componentId, offsetX, offsetY } = draggingInfo;
+      // Neue Position berechnen
+      const newX = e.clientX - offsetX;
+      const newY = e.clientY - offsetY;
+
+      // ...aktualisieren wir die Position dieses einen Bauteils im State.
+      setState(prevState => ({
+        ...prevState,
+        components: {
+          ...prevState.components,
+          [componentId]: {
+            ...prevState.components[componentId],
+            position: { x: newX, y: newY },
+          },
+        },
+      }));
+    }
+  };
+
+  const handleMouseUp = () => {
+    // Beendet den Drag-Vorgang, indem wir die Dragging-Info zurücksetzen.
+    setDraggingInfo(null);
   };
 
   return (
     <div className="app-container">
       <aside className="palette-container">
-        {/* Wir übergeben die handleAddComponent Funktion an die Palette */}
         <Palette onAddComponent={handleAddComponent} />
       </aside>
-
       <main className="canvas-container">
-        {/* Die Zeichenfläche erhält jetzt die Komponenten aus dem dynamischen Zustand */}
-        <CircuitCanvas components={Object.values(state.components)} />
+        <CircuitCanvas
+          components={Object.values(state.components)}
+          onComponentMouseDown={handleMouseDownOnComponent}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+        />
       </main>
     </div>
   );
 }
+
