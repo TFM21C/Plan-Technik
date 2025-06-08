@@ -6,7 +6,7 @@ import './index.css';
 import Palette from './components/ComponentPalette/Palette';
 import CircuitCanvas from './components/Canvas/CircuitCanvas';
 import { useCircuitState } from './hooks/useCircuitState';
-import { CircuitComponent, ComponentType } from './types/circuit';
+import { CircuitComponent, ComponentType, Pin } from './types/circuit';
 
 // Ein kleiner Typ für unsere Dragging-Informationen
 interface DraggingInfo {
@@ -14,11 +14,15 @@ interface DraggingInfo {
   offsetX: number;
   offsetY: number;
 }
+interface ConnectingInfo { startPinId: string | null; }
 
 export default function App() {
   const { state, setState } = useCircuitState();
   // Neuer State, um zu verfolgen, was gerade gezogen wird.
   const [draggingInfo, setDraggingInfo] = React.useState<DraggingInfo | null>(null);
+  // State für den Verbindungsmodus
+  const [connectingInfo, setConnectingInfo] = React.useState<ConnectingInfo>({ startPinId: null });
+  const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
 
   React.useEffect(() => {
     // ... (der useEffect zum initialen Setzen der Stromschienen bleibt unverändert)
@@ -31,12 +35,31 @@ export default function App() {
     });
   }, [setState]);
 
+  const createPinsForComponent = (componentId: string, type: ComponentType): Pin[] => {
+    switch (type) {
+        case ComponentType.NormallyOpen:
+        case ComponentType.NormallyClosed:
+            return [
+                { id: `${componentId}-p1`, componentId, label: '1', position: { x: 10, y: 0 } },
+                { id: `${componentId}-p2`, componentId, label: '2', position: { x: 10, y: 40 } },
+            ];
+        case ComponentType.Motor:
+        case ComponentType.Lamp:
+            return [
+                { id: `${componentId}-p1`, componentId, label: 'A1', position: { x: 20, y: 2 } },
+                { id: `${componentId}-p2`, componentId, label: 'A2', position: { x: 20, y: 38 } },
+            ];
+        default:
+            return [];
+    }
+  };
+
   const handleAddComponent = (type: ComponentType) => {
-    // ... (diese Funktion bleibt unverändert)
     const newId = `${type.toLowerCase()}-${Date.now()}`;
+    const pins = createPinsForComponent(newId, type);
     const newComponent: CircuitComponent = {
-      id: newId, type: type, label: newId,
-      position: { x: 150, y: 150 }, pins: [],
+      id: newId, type, label: newId,
+      position: { x: 150, y: 150 }, pins,
     };
     setState(prevState => ({
       ...prevState,
@@ -60,7 +83,7 @@ export default function App() {
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    // Nur wenn wir gerade ein Bauteil ziehen...
+    setMousePosition({ x: e.clientX, y: e.clientY });
     if (draggingInfo) {
       const { componentId, offsetX, offsetY } = draggingInfo;
       // Neue Position berechnen
@@ -86,6 +109,37 @@ export default function App() {
     setDraggingInfo(null);
   };
 
+  const handleCanvasClick = () => {
+    if (connectingInfo.startPinId) {
+        setConnectingInfo({ startPinId: null });
+    }
+  };
+
+  const handlePinClick = (e: React.MouseEvent, pinId: string) => {
+    e.stopPropagation();
+
+    if (!connectingInfo.startPinId) {
+      setConnectingInfo({ startPinId: pinId });
+    } else {
+      const newConnectionId = `conn-${connectingInfo.startPinId}-${pinId}`;
+      setState(prevState => ({
+        ...prevState,
+        connections: {
+            ...prevState.connections,
+            [newConnectionId]: { id: newConnectionId, startPinId: connectingInfo.startPinId!, endPinId: pinId }
+        }
+      }));
+      setConnectingInfo({ startPinId: null });
+    }
+  };
+
+  const getConnectingInfoForCanvas = () => {
+    if (!connectingInfo.startPinId) return null;
+    const startPin = Object.values(state.components).flatMap(c => c.pins).find(p => p.id === connectingInfo.startPinId);
+    if (!startPin) return null;
+    return { startPin, mousePosition };
+  };
+
   return (
     <div className="app-container">
       <aside className="palette-container">
@@ -93,10 +147,14 @@ export default function App() {
       </aside>
       <main className="canvas-container">
         <CircuitCanvas
-          components={Object.values(state.components)}
+          components={state.components}
+          connections={state.connections}
           onComponentMouseDown={handleMouseDownOnComponent}
+          onPinClick={handlePinClick}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
+          onCanvasClick={handleCanvasClick}
+          connectingInfo={getConnectingInfoForCanvas()}
         />
       </main>
     </div>

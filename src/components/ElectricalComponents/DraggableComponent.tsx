@@ -4,9 +4,10 @@ import { CircuitComponent, ComponentType } from '../../types/circuit';
 interface DraggableComponentProps {
   component: CircuitComponent;
   onMouseDown: (e: React.MouseEvent, componentId: string) => void;
+  onPinClick: (e: React.MouseEvent, pinId: string) => void;
 }
 
-const DraggableComponent: React.FC<DraggableComponentProps> = ({ component, onMouseDown }) => {
+const DraggableComponent: React.FC<DraggableComponentProps> = ({ component, onMouseDown, onPinClick }) => {
   // Diese Logik zum Zeichnen der einzelnen Bauteile ziehen wir von der Canvas hierher.
   const renderVisual = () => {
     const style = {
@@ -46,6 +47,23 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component, onMo
       onMouseDown={(e) => onMouseDown(e, component.id)}
     >
       {renderVisual()}
+
+      {component.pins.map(pin => (
+        <circle
+          key={pin.id}
+          cx={pin.position.x}
+          cy={pin.position.y}
+          r="5"
+          fill="blue"
+          stroke="white"
+          strokeWidth="1"
+          style={{ cursor: 'crosshair' }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            onPinClick(e, pin.id);
+          }}
+        />
+      ))}
     </g>
   );
 };
