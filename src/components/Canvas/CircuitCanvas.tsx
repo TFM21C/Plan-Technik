@@ -3,62 +3,81 @@
 import React from 'react';
 import { CircuitComponent, ComponentType } from '../../types/circuit';
 
-// Definiert die 'Props' (Eigenschaften), die diese Komponente empfängt.
-// In diesem Fall ist es eine Liste von CircuitComponent-Objekten.
 interface CircuitCanvasProps {
   components: CircuitComponent[];
 }
 
-/**
- * Die Zeichenfläche, die eine Liste von Komponenten erhält und diese als SVG darstellt.
- */
 const CircuitCanvas: React.FC<CircuitCanvasProps> = ({ components }) => {
-  // Eine Hilfsfunktion, die entscheidet, WIE ein einzelnes Bauteil gezeichnet wird.
   const renderComponent = (component: CircuitComponent) => {
+    // Definieren wir ein paar Standard-SVG-Stile
+    const style = {
+      stroke: 'black',
+      strokeWidth: 2,
+      fill: 'none',
+    };
+
     switch (component.type) {
       case ComponentType.PowerSource24V:
       case ComponentType.PowerSource0V:
         return (
           <>
-            <line x1="0" y1="0" x2="400" y2="0" stroke="black" strokeWidth="2" />
-            <text x="-30" y="5" fontSize="12" fill="black">
+            <line x1="0" y1="0" x2="400" y2="0" {...style} />
+            <text x="-35" y="5" fontSize="14" fill="black">
               {component.label}
             </text>
           </>
         );
-      // Hier werden wir später weitere 'case' für andere Bauteile hinzufügen
-      // z.B. case ComponentType.NormallyOpen: ...
-      default:
-        // Falls ein unbekannter Typ kommt, zeichnen wir einen Platzhalter
+
+      case ComponentType.NormallyOpen: // Schließer
         return (
-          <rect
-            width="40"
-            height="20"
-            fill="lightgrey"
-            stroke="red"
-            strokeDasharray="5,5"
-          />
+          <>
+            <line x1="10" y1="0" x2="10" y2="10" {...style} />
+            <line x1="10" y1="30" x2="10" y2="40" {...style} />
+            <line x1="0" y1="10" x2="10" y2="20" {...style} />
+            <text x="20" y="25" fontSize="12">{component.label}</text>
+          </>
+        );
+
+      case ComponentType.NormallyClosed: // Öffner
+        return (
+          <>
+            <line x1="10" y1="0" x2="10" y2="15" {...style} />
+            <line x1="10" y1="25" x2="10" y2="40" {...style} />
+            <line x1="10" y1="15" x2="20" y2="25" {...style} />
+            <text x="25" y="25" fontSize="12">{component.label}</text>
+          </>
+        );
+
+      case ComponentType.Motor:
+        return (
+          <>
+            <circle cx="20" cy="20" r="18" {...style} fill="white" />
+            <text x="16" y="25" fontSize="18" fontWeight="bold" fill="black">M</text>
+            <text x="45" y="25" fontSize="12">{component.label}</text>
+          </>
+        );
+
+      case ComponentType.Lamp:
+         return (
+          <>
+            <circle cx="20" cy="20" r="18" {...style} fill="white" />
+            <line x1="5" y1="5" x2="35" y2="35" {...style} />
+            <line x1="35" y1="5" x2="5" y2="35" {...style} />
+            <text x="45" y="25" fontSize="12">{component.label}</text>
+          </>
+        );
+
+      default:
+        return (
+          <rect width="40" height="20" fill="lightgrey" stroke="red" />
         );
     }
   };
 
   return (
-    // Das SVG-Element ist unsere Leinwand.
-    <svg
-      width="100%"
-      height="100%"
-      style={{ backgroundColor: 'white', border: '1px solid #ccc' }}
-    >
-      {/* Wir gehen durch die Liste der Komponenten.
-        Für jede Komponente erstellen wir eine SVG-Gruppe ('g').
-        Diese Gruppe verschieben wir an die Position der Komponente.
-      */}
+    <svg width="100%" height="100%" style={{ backgroundColor: 'white', border: '1px solid #ccc' }}>
       {components.map((component) => (
-        <g
-          key={component.id}
-          transform={`translate(${component.position.x}, ${component.position.y})`}
-        >
-          {/* Wir rufen unsere Hilfsfunktion auf, um die eigentliche Grafik zu malen */}
+        <g key={component.id} transform={`translate(${component.position.x}, ${component.position.y})`}>
           {renderComponent(component)}
         </g>
       ))}
