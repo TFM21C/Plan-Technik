@@ -1,3 +1,5 @@
+// src/components/UI/DetailsSidebar.tsx
+
 import React from 'react';
 import { CircuitComponent } from '../../types/circuit';
 
@@ -5,11 +7,12 @@ interface DetailsSidebarProps {
   selectedComponent: CircuitComponent | null;
   onDelete: (componentId: string) => void;
   onClose: () => void;
+  onLabelChange: (componentId: string, newLabel: string) => void;
 }
 
-const DetailsSidebar: React.FC<DetailsSidebarProps> = ({ selectedComponent, onDelete, onClose }) => {
+const DetailsSidebar: React.FC<DetailsSidebarProps> = ({ selectedComponent, onDelete, onClose, onLabelChange }) => {
   if (!selectedComponent) {
-    return null; // Don't render anything if no component is selected
+    return null;
   }
 
   return (
@@ -25,8 +28,7 @@ const DetailsSidebar: React.FC<DetailsSidebarProps> = ({ selectedComponent, onDe
         <input
           type="text"
           value={selectedComponent.label}
-          // Note: Editing functionality will be added in the next step
-          readOnly
+          onChange={(e) => onLabelChange(selectedComponent.id, e.target.value)}
           className="details-input"
         />
         <button onClick={() => onDelete(selectedComponent.id)} className="delete-btn">
