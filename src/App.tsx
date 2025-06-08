@@ -1,10 +1,25 @@
-import "./index.css";
+// src/App.tsx
+
+import React from 'react';
+import './index.css'; // Importiert unsere globalen CSS-Stile
+
+// Importiert unsere Platzhalter-Komponenten
+import Palette from './components/ComponentPalette/Palette';
+import CircuitCanvas from './components/Canvas/CircuitCanvas';
 
 export default function App() {
   return (
-    <div className="App">
-      <h1>Hello CodeSandbox</h1>
-      <h2>Start editing to see some magic happen!</h2>
+    <div className="app-container">
+      {/* Der Container für die linke Seitenleiste/Palette */}
+      <aside className="palette-container">
+        <Palette />
+      </aside>
+
+      {/* Der Hauptbereich für die Zeichenfläche */}
+      <main className="canvas-container">
+        <CircuitCanvas />
+      </main>
     </div>
   );
 }
+
