@@ -20,6 +20,7 @@ export interface Pin {
   id: string;      // Eindeutige ID des Pins, z.B. 's1-pin-13'
   componentId: string; // ID der Komponente, zu der der Pin gehört
   label: string;   // Die Beschriftung des Pins, z.B. '13', 'A1'
+  position: { x: number; y: number }; // RELATIVE Position zum Bauteil-Ursprung
 }
 
 /**
