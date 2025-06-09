@@ -5,7 +5,6 @@ import PaletteIcon from './PaletteIcon';
 
 interface PaletteProps {
   onAddComponent: (type: ComponentType) => void;
-  // ... (Props für Simulation bleiben für später erhalten)
   onToggleSimulation: () => void;
   isSimulating: boolean;
 }
@@ -19,6 +18,7 @@ const PaletteButton: React.FC<{ type: ComponentType, onAddComponent: (type: Comp
 
 const Palette: React.FC<PaletteProps> = ({ onAddComponent, onToggleSimulation, isSimulating }) => {
   const componentsToAdd = [
+    ComponentType.PowerSource24V, ComponentType.PowerSource0V,
     ComponentType.PushbuttonNO, ComponentType.PushbuttonNC,
     ComponentType.NormallyOpen, ComponentType.NormallyClosed,
     ComponentType.Coil, ComponentType.Lamp, ComponentType.Motor
