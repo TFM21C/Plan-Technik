@@ -21,16 +21,15 @@ const DetailsSidebar: React.FC<DetailsSidebarProps> = ({ selectedComponent, onDe
       </div>
       <div className="sidebar-content">
         <div>
-            <p><strong>Bezeichnung:</strong></p>
-            <input type="text" value={selectedComponent.label} onChange={(e) => onLabelChange(selectedComponent.id, e.target.value)} className="details-input"/>
+          <p><strong>Bezeichnung:</strong></p>
+          <input type="text" value={selectedComponent.label} onChange={(e) => onLabelChange(selectedComponent.id, e.target.value)} className="details-input"/>
         </div>
-
         {selectedComponent.pins.length > 0 && (
-          <div>
+          <div style={{marginTop: '1rem'}}>
             <p><strong>Anschlüsse:</strong></p>
             {selectedComponent.pins.map((pin, index) => (
               <div key={pin.id} className="pin-edit-row">
-                <label htmlFor={pin.id}>{`Kontakt ${index + 1}`}:</label>
+                <label htmlFor={pin.id}>{`Anschluss ${index + 1}`}:</label>
                 <input id={pin.id} type="text" value={pin.label} onChange={(e) => onPinLabelChange(pin.id, e.target.value)} className="details-input pin-input" />
               </div>
             ))}
@@ -43,5 +42,4 @@ const DetailsSidebar: React.FC<DetailsSidebarProps> = ({ selectedComponent, onDe
     </aside>
   );
 };
-
 export default DetailsSidebar;
