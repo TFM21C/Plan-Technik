@@ -1,4 +1,3 @@
-// src/App.tsx
 import React from 'react';
 import './index.css';
 import Palette from './components/ComponentPalette/Palette';
@@ -60,18 +59,62 @@ export default function App() {
   };
 
   const handlePinLabelChange = (pinId: string, newLabel: string) => { setState(prevState => { const component = Object.values(prevState.components).find(c => c.pins.some(p => p.id === pinId)); if (!component) return prevState; const updatedPins = component.pins.map(pin => pin.id === pinId ? { ...pin, label: newLabel } : pin); const updatedComponent = { ...component, pins: updatedPins }; return { ...prevState, components: { ...prevState.components, [component.id]: updatedComponent } }; }); };
-  const handleLabelChange = (componentId: string, newLabel: string) => { setState(prevState => { if (!prevState.components[componentId]) return prevState; const updatedComponent = { ...prevState.components[componentId], label: newLabel }; return { ...prevState, components: { ...prevState.components, [componentId]: updatedComponent } }; }); };
+
+  const getCoordsInSvg = (e: React.MouseEvent): { x: number; y: number } => { const svg = svgRef.current; if (!svg) return { x: 0, y: 0 }; const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const svgP = pt.matrixTransform(svg.getScreenCTM()?.inverse()); return { x: svgP.x, y: svgP.y }; };
+
+  const handleMouseDownOnComponent = (e: React.MouseEvent, componentId: string) => { if (isSimulating) return; e.preventDefault(); setSelectedComponentId(componentId); const component = state.components[componentId]; if (!component) return; const mouseCoords = getCoordsInSvg(e); const offsetX = mouseCoords.x - component.position.x; const offsetY = mouseCoords.y - component.position.y; setDraggingInfo({ componentId, offsetX, offsetY }); };
+
+  const handleMouseMove = (e: React.MouseEvent) => { const currentMousePos = getCoordsInSvg(e); setMousePosition(currentMousePos); if (draggingInfo) { const { componentId, offsetX, offsetY } = draggingInfo; const newX = currentMousePos.x - offsetX; const newY = currentMousePos.y - offsetY; setState(prevState => ({ ...prevState, components: { ...prevState.components, [componentId]: { ...prevState.components[componentId], position: { x: newX, y: newY } } } })); } };
+
+  const handleMouseUp = () => { setDraggingInfo(null); };
+
+  const handleCanvasClick = () => { if (connectingInfo.startPinId) { setConnectingInfo({ startPinId: null }); } else { setSelectedComponentId(null); } };
+
+  const handlePinClick = (e: React.MouseEvent, pinId: string) => { if (isSimulating) return; e.stopPropagation(); setSelectedComponentId(null); if (!connectingInfo.startPinId) { setConnectingInfo({ startPinId: pinId }); } else { if (connectingInfo.startPinId === pinId) { setConnectingInfo({ startPinId: null }); return; } const newConnectionId = `conn-${connectingInfo.startPinId}-${pinId}`; setState(prevState => ({ ...prevState, connections: { ...prevState.connections, [newConnectionId]: { id: newConnectionId, startPinId: connectingInfo.startPinId!, endPinId: pinId } } })); setConnectingInfo({ startPinId: null }); } };
+
+  const handleToggleSimulation = () => { setIsSimulating(prev => !prev); setSelectedComponentId(null); };
+
+  const handleComponentClick = (e: React.MouseEvent, componentId: string) => { if (!isSimulating) { setSelectedComponentId(componentId); return; } e.stopPropagation(); const component = state.components[componentId]; const typesToToggle = [ComponentType.NormallyOpen, ComponentType.NormallyClosed, ComponentType.PushbuttonNO, ComponentType.PushbuttonNC]; if (typesToToggle.includes(component.type)) { setState(prevState => { const currentComp = prevState.components[componentId]; const newCompState = { ...currentComp.state, isOpen: !currentComp.state?.isOpen }; return { ...prevState, components: { ...prevState.components, [componentId]: { ...currentComp, state: newCompState } } }; }); } };
+
   const handleDeleteComponent = (componentId: string) => { setState(prevState => { const { [componentId]: _, ...restComponents } = prevState.components; const componentPins = new Set(prevState.components[componentId]?.pins.map(p => p.id) || []); const newConnections = Object.fromEntries(Object.entries(prevState.connections).filter(([, conn]) => !componentPins.has(conn.startPinId) && !componentPins.has(conn.endPinId))); return { components: restComponents, connections: newConnections }; }); setSelectedComponentId(null); };
-  
-  //... (alle anderen Handler wie `getCoordsInSvg`, `handleMouseDownOnComponent`, `handleMouseMove` etc. bleiben unverändert)
-  
+
+  // DIESE FUNKTION WURDE IM MERGE CONFLICT EINGEFÜGT, BEHALTE SIE:
+  const handleDeleteConnection = (connectionId: string) => {
+    setState(prevState => {
+      const { [connectionId]: _, ...rest } = prevState.connections;
+      return { ...prevState, connections: rest };
+    });
+  };
+
+  const handleLabelChange = (componentId: string, newLabel: string) => { setState(prevState => { if (!prevState.components[componentId]) return prevState; const updatedComponent = { ...prevState.components[componentId], label: newLabel }; return { ...prevState, components: { ...prevState.components, [componentId]: updatedComponent } }; }); };
+
+  // (alle anderen Handler bleiben wie sie sind)
+
+  // Falls du connectingInfo an Canvas weiterreichen willst (z.B. für eine Hilfslinie beim Verbinden)
+  function getConnectingInfoForCanvas() {
+    return connectingInfo;
+  }
+
   return (
     <div className="app-container">
       <aside className="palette-container">
         <Palette onAddComponent={handleAddComponent} onToggleSimulation={() => {}} isSimulating={false} />
       </aside>
       <main className="canvas-container">
-        {/* ... */}
+        <CircuitCanvas
+          svgRef={svgRef}
+          components={state.components}
+          connections={state.connections}
+          selectedComponentId={selectedComponentId}
+          onComponentMouseDown={handleMouseDownOnComponent}
+          onPinClick={handlePinClick}
+          onComponentClick={handleComponentClick}
+          onConnectionClick={handleDeleteConnection}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onCanvasClick={handleCanvasClick}
+          connectingInfo={getConnectingInfoForCanvas()}
+        />
       </main>
       <DetailsSidebar
         selectedComponent={selectedComponentId ? state.components[selectedComponentId] : null}
