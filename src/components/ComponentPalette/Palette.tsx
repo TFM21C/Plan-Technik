@@ -5,6 +5,7 @@ import PaletteIcon from './PaletteIcon';
 
 interface PaletteProps {
   onAddComponent: (type: ComponentType) => void;
+  // ... (Props für Simulation bleiben für später erhalten)
   onToggleSimulation: () => void;
   isSimulating: boolean;
 }
@@ -46,5 +47,4 @@ const Palette: React.FC<PaletteProps> = ({ onAddComponent, onToggleSimulation, i
     </div>
   );
 };
-
 export default Palette;
