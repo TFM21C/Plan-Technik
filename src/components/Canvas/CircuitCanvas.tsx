@@ -10,6 +10,7 @@ interface CircuitCanvasProps {
   onComponentMouseDown: (e: React.MouseEvent, componentId: string) => void;
   onPinClick: (e: React.MouseEvent, pinId: string) => void;
   onComponentClick: (e: React.MouseEvent, componentId: string) => void; // NEU
+  onConnectionClick: (e: React.MouseEvent, connectionId: string) => void;
   onMouseMove: (e: React.MouseEvent) => void;
   onMouseUp: () => void;
   onCanvasClick: () => void;
@@ -25,6 +26,7 @@ const CircuitCanvas: React.FC<CircuitCanvasProps> = (props) => {
     onComponentMouseDown,
     onPinClick,
     onComponentClick,
+    onConnectionClick,
     onMouseMove,
     onMouseUp,
     onCanvasClick,
@@ -58,7 +60,16 @@ const CircuitCanvas: React.FC<CircuitCanvasProps> = (props) => {
         const start = getAbsolutePinPosition(conn.startPinId);
         const end = getAbsolutePinPosition(conn.endPinId);
         return (
-          <line key={conn.id} x1={start.x} y1={start.y} x2={end.x} y2={end.y} stroke="black" strokeWidth={2} />
+          <line
+            key={conn.id}
+            x1={start.x}
+            y1={start.y}
+            x2={end.x}
+            y2={end.y}
+            stroke="black"
+            strokeWidth={2}
+            onClick={(e) => onConnectionClick(e, conn.id)}
+          />
         );
       })}
       {connectingInfo && (
