@@ -2,7 +2,9 @@
 import React from 'react';
 import { ComponentType } from '../../types/circuit';
 
-interface PaletteIconProps { type: ComponentType; }
+interface PaletteIconProps {
+  type: ComponentType;
+}
 
 const PaletteIcon: React.FC<PaletteIconProps> = ({ type }) => {
   const style: React.CSSProperties = { stroke: 'currentColor', strokeWidth: 2, fill: 'none' };
@@ -24,9 +26,14 @@ const PaletteIcon: React.FC<PaletteIconProps> = ({ type }) => {
         return <g><circle cx="16" cy="16" r="10" style={style} /><line x1="9" y1="9" x2="23" y2="23" style={style} /><line x1="23" y1="9" x2="9" y2="23" style={style} /></g>;
       case ComponentType.Motor:
         return <g><circle cx="16" cy="16" r="12" style={style} /><text x="12" y="21" fontSize="14px" style={{ fill: 'currentColor', stroke: 'none' }}>M</text></g>;
-      default: return null;
+      case ComponentType.PowerSource24V:
+      case ComponentType.PowerSource0V:
+        return <g><line x1="4" y1="16" x2="28" y2="16" style={{stroke: 'currentColor', strokeWidth: 3, fill: 'none'}} /></g>;
+      default:
+        return null;
     }
   };
   return (<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>{getIcon()}</svg>);
 };
+
 export default PaletteIcon;
