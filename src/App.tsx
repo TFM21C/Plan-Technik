@@ -1,4 +1,3 @@
-// src/App.tsx
 import React from 'react';
 import './index.css';
 import Palette from './components/ComponentPalette/Palette';
@@ -16,7 +15,6 @@ export default function App() {
   const [connectingInfo, setConnectingInfo] = React.useState<ConnectingInfo>({ startPinId: null });
   const [mousePosition, setMousePosition] = React.useState({ x: 0, y: 0 });
   const [selectedComponentId, setSelectedComponentId] = React.useState<string | null>(null);
-  const [selectedConnectionId, setSelectedConnectionId] = React.useState<string | null>(null);
   const [isSimulating, setIsSimulating] = React.useState<boolean>(false);
   const svgRef = React.useRef<SVGSVGElement>(null);
 
@@ -113,14 +111,6 @@ export default function App() {
     });
   };
 
-  const handleLabelChange = (componentId: string, newLabel: string) => {
-    setState(prevState => {
-      if (!prevState.components[componentId]) return prevState;
-      const updatedComponent = { ...prevState.components[componentId], label: newLabel };
-      return { ...prevState, components: { ...prevState.components, [componentId]: updatedComponent } };
-    });
-  };
-
   const handleDeleteComponent = (componentId: string) => {
     setState(prevState => {
       const { [componentId]: _, ...restComponents } = prevState.components;
@@ -135,18 +125,19 @@ export default function App() {
     setSelectedComponentId(null);
   };
 
-  const handleConnectionClick = (e: React.MouseEvent, connectionId: string) => {
-    e.stopPropagation();
-    setSelectedComponentId(null);
-    setSelectedConnectionId(connectionId);
-  };
-
   const handleDeleteConnection = (connectionId: string) => {
     setState(prevState => {
       const { [connectionId]: _, ...rest } = prevState.connections;
       return { ...prevState, connections: rest };
     });
-    setSelectedConnectionId(null);
+  };
+
+  const handleLabelChange = (componentId: string, newLabel: string) => {
+    setState(prevState => {
+      if (!prevState.components[componentId]) return prevState;
+      const updatedComponent = { ...prevState.components[componentId], label: newLabel };
+      return { ...prevState, components: { ...prevState.components, [componentId]: updatedComponent } };
+    });
   };
 
   const getCoordsInSvg = (e: React.MouseEvent): { x: number; y: number } => {
@@ -163,7 +154,6 @@ export default function App() {
     if (isSimulating) return;
     e.preventDefault();
     setSelectedComponentId(componentId);
-    setSelectedConnectionId(null);
     const component = state.components[componentId];
     if (!component) return;
     const mouseCoords = getCoordsInSvg(e);
@@ -198,7 +188,6 @@ export default function App() {
       setConnectingInfo({ startPinId: null });
     } else {
       setSelectedComponentId(null);
-      setSelectedConnectionId(null);
     }
   };
 
@@ -206,7 +195,6 @@ export default function App() {
     if (isSimulating) return;
     e.stopPropagation();
     setSelectedComponentId(null);
-    setSelectedConnectionId(null);
     if (!connectingInfo.startPinId) {
       setConnectingInfo({ startPinId: pinId });
     } else {
@@ -229,13 +217,11 @@ export default function App() {
   const handleToggleSimulation = () => {
     setIsSimulating(prev => !prev);
     setSelectedComponentId(null);
-    setSelectedConnectionId(null);
   };
 
   const handleComponentClick = (e: React.MouseEvent, componentId: string) => {
     if (!isSimulating) {
       setSelectedComponentId(componentId);
-      setSelectedConnectionId(null);
       return;
     }
     e.stopPropagation();
@@ -275,12 +261,12 @@ export default function App() {
           selectedComponentId={selectedComponentId}
           onComponentMouseDown={handleMouseDownOnComponent}
           onPinClick={handlePinClick}
+          onComponentClick={handleComponentClick}
+          onConnectionClick={handleDeleteConnection}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onCanvasClick={handleCanvasClick}
           connectingInfo={getConnectingInfoForCanvas()}
-          onComponentClick={handleComponentClick}
-          onConnectionClick={handleConnectionClick}
         />
       </main>
       {!isSimulating && (

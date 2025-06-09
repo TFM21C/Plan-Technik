@@ -9,8 +9,8 @@ interface CircuitCanvasProps {
   selectedComponentId: string | null;
   onComponentMouseDown: (e: React.MouseEvent, componentId: string) => void;
   onPinClick: (e: React.MouseEvent, pinId: string) => void;
-  onComponentClick: (e: React.MouseEvent, componentId: string) => void; // NEU
-  onConnectionClick: (e: React.MouseEvent, connectionId: string) => void;
+  onComponentClick: (e: React.MouseEvent, componentId: string) => void;
+  onConnectionClick: (connectionId: string) => void;
   onMouseMove: (e: React.MouseEvent) => void;
   onMouseUp: () => void;
   onCanvasClick: () => void;
@@ -32,6 +32,8 @@ const CircuitCanvas: React.FC<CircuitCanvasProps> = (props) => {
     onCanvasClick,
     connectingInfo,
   } = props;
+
+  const [hoveredConnectionId, setHoveredConnectionId] = React.useState<string | null>(null);
 
   const getAbsolutePinPosition = (pinId: string) => {
     const pin = Object.values(components)
@@ -66,9 +68,15 @@ const CircuitCanvas: React.FC<CircuitCanvasProps> = (props) => {
             y1={start.y}
             x2={end.x}
             y2={end.y}
-            stroke="black"
+            stroke={hoveredConnectionId === conn.id ? 'red' : 'black'}
             strokeWidth={2}
-            onClick={(e) => onConnectionClick(e, conn.id)}
+            onMouseEnter={() => setHoveredConnectionId(conn.id)}
+            onMouseLeave={() => setHoveredConnectionId(null)}
+            onClick={e => {
+              e.stopPropagation();
+              onConnectionClick(conn.id);
+            }}
+            style={{ cursor: 'pointer' }}
           />
         );
       })}
