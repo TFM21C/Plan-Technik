@@ -29,49 +29,23 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component, isSe
           </>
         );
 
-      case ComponentType.NormallyOpen: // Schließer
-        // NEU: Zeichnet basierend auf dem Zustand
+      case ComponentType.NormallyOpen:
+      case ComponentType.PushbuttonNO:
         if (component.state?.isOpen === false) {
-          // Geschlossen
-          return (
-            <>
-              <line x1="10" y1="0" x2="10" y2="40" style={style} />
-              <text x="20" y="25" style={textStyle}>{component.label}</text>
-            </>
-          );
+          return <><line x1="10" y1="0" x2="10" y2="40" style={style} /><text x="20" y="25" style={textStyle}>{component.label}</text></>;
         }
-        // Offen (Standard)
-        return (
-          <>
-            <line x1="10" y1="0" x2="10" y2="10" style={style} />
-            <line x1="10" y1="30" x2="10" y2="40" style={style} />
-            <line x1="0" y1="10" x2="10" y2="20" style={style} />
-            <text x="20" y="25" style={textStyle}>{component.label}</text>
-          </>
-        );
+        return <><line x1="10" y1="0" x2="10" y2="10" style={style} /><line x1="10" y1="30" x2="10" y2="40" style={style} /><line x1="0" y1="10" x2="10" y2="20" style={style} /><text x="20" y="25" style={textStyle}>{component.label}</text></>;
 
-      case ComponentType.NormallyClosed: // Öffner
-        // NEU: Zeichnet basierend auf dem Zustand
+      case ComponentType.NormallyClosed:
+      case ComponentType.PushbuttonNC:
+        // KORRIGIERTE GRAFIK FÜR ÖFFNER (mit Nase)
         if (component.state?.isOpen === true) {
-          // Geöffnet
-          return (
-            <>
-              <line x1="10" y1="0" x2="10" y2="10" style={style} />
-              <line x1="10" y1="30" x2="10" y2="40" style={style} />
-              <line x1="0" y1="10" x2="10" y2="20" style={style} />
-              <text x="25" y="25" style={textStyle}>{component.label}</text>
-            </>
-          );
+             return <><line x1="10" y1="0" x2="10" y2="10" style={style} /><line x1="10" y1="30" x2="10" y2="40" style={style} /><line x1="0" y1="10" x2="10" y2="20" style={style} /><text x="25" y="25" style={textStyle}>{component.label}</text></>;
         }
-        // Geschlossen (Standard)
-        return (
-          <>
-            <line x1="10" y1="0" x2="10" y2="15" style={style} />
-            <line x1="10" y1="25" x2="10" y2="40" style={style} />
-            <line x1="10" y1="15" x2="20" y2="25" style={style} />
-            <text x="25" y="25" style={textStyle}>{component.label}</text>
-          </>
-        );
+        return <><line x1="10" y1="0" x2="10" y2="15" style={style} /><line x1="10" y1="25" x2="10" y2="40" style={style} /><line x1="10" y1="15" x2="20" y2="25" style={style} /><text x="25" y="25" style={textStyle}>{component.label}</text></>;
+
+      case ComponentType.Coil:
+        return <><rect x="5" y="5" width="30" height="20" style={style} /><text x="40" y="22" style={textStyle}>{component.label}</text></>;
 
       case ComponentType.Motor:
         return (
