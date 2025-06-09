@@ -41,15 +41,18 @@ export default function App() {
     switch (type) {
       case ComponentType.NormallyOpen:
       case ComponentType.NormallyClosed:
+      case ComponentType.PushbuttonNO:
+      case ComponentType.PushbuttonNC:
         return [
-          { id: `${componentId}-p1`, componentId, label: '1', position: { x: 10, y: 0 } },
-          { id: `${componentId}-p2`, componentId, label: '2', position: { x: 10, y: 40 } },
+          { id: `${componentId}-p1`, componentId, label: '1', position: { x: 16, y: 4 } },
+          { id: `${componentId}-p2`, componentId, label: '2', position: { x: 16, y: 28 } },
         ];
+      case ComponentType.Coil:
       case ComponentType.Motor:
       case ComponentType.Lamp:
         return [
-          { id: `${componentId}-p1`, componentId, label: 'A1', position: { x: 20, y: 2 } },
-          { id: `${componentId}-p2`, componentId, label: 'A2', position: { x: 20, y: 38 } },
+          { id: `${componentId}-p1`, componentId, label: 'A1', position: { x: 2, y: 14 } },
+          { id: `${componentId}-p2`, componentId, label: 'A2', position: { x: 30, y: 14 } },
         ];
       default:
         return [];
@@ -59,15 +62,15 @@ export default function App() {
   const handleAddComponent = (type: ComponentType) => {
     const newId = `${type.toLowerCase()}-${Date.now()}`;
     const pins = createPinsForComponent(newId, type);
-    let initialState = {} as any; // Standardmäßig leerer Zustand
-    // NEU: Setze den Anfangszustand für Schalter
-    if (type === ComponentType.NormallyOpen) {
+    let initialState = {};
+    if (type === ComponentType.NormallyOpen || type === ComponentType.PushbuttonNO) {
       initialState = { isOpen: true };
-    } else if (type === ComponentType.NormallyClosed) {
+    } else if (type === ComponentType.NormallyClosed || type === ComponentType.PushbuttonNC) {
       initialState = { isOpen: false };
     }
     const newComponent: CircuitComponent = { id: newId, type, label: newId, position: { x: 150, y: 150 }, pins, state: initialState };
     setState(prevState => ({ ...prevState, components: { ...prevState.components, [newId]: newComponent } }));
+    setSelectedComponentId(newId);
   };
 
   const getCoordsInSvg = (e: React.MouseEvent): { x: number; y: number } => {
@@ -133,11 +136,16 @@ export default function App() {
 
   // NEU: Behandelt Klicks auf Bauteile (nur im Simulationsmodus)
   const handleComponentClick = (e: React.MouseEvent, componentId: string) => {
-    if (!isSimulating) return; // Nur im Simulationsmodus
+    if (!isSimulating) return;
 
     e.stopPropagation();
     const component = state.components[componentId];
-    if (component.type === ComponentType.NormallyOpen || component.type === ComponentType.NormallyClosed) {
+    if (
+      component.type === ComponentType.NormallyOpen ||
+      component.type === ComponentType.NormallyClosed ||
+      component.type === ComponentType.PushbuttonNO ||
+      component.type === ComponentType.PushbuttonNC
+    ) {
       setState(prevState => {
         const currentComp = prevState.components[componentId];
         const newCompState = { ...currentComp.state, isOpen: !currentComp.state?.isOpen };

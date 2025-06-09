@@ -7,8 +7,11 @@
 export enum ComponentType {
   PowerSource24V = '24V',
   PowerSource0V = '0V',
-  NormallyOpen = 'Schließer', // Schließer
-  NormallyClosed = 'Öffner', // Öffner
+  NormallyOpen = 'Schalter (Schließer)',
+  NormallyClosed = 'Schalter (Öffner)',
+  PushbuttonNO = 'Taster (Schließer)',
+  PushbuttonNC = 'Taster (Öffner)',
+  Coil = 'Schützspule',
   Motor = 'Motor',
   Lamp = 'Lampe',
 }
