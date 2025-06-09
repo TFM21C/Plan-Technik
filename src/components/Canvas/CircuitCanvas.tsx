@@ -9,7 +9,7 @@ interface CircuitCanvasProps {
   selectedComponentId: string | null;
   onComponentMouseDown: (e: React.MouseEvent, componentId: string) => void;
   onPinClick: (e: React.MouseEvent, pinId: string) => void;
-  onComponentClick: (e: React.MouseEvent, componentId: string) => void; // NEU
+  onComponentClick: (e: React.MouseEvent, componentId: string) => void;
   onConnectionClick: (connectionId: string) => void;
   onMouseMove: (e: React.MouseEvent) => void;
   onMouseUp: () => void;
@@ -72,7 +72,7 @@ const CircuitCanvas: React.FC<CircuitCanvasProps> = (props) => {
             strokeWidth={2}
             onMouseEnter={() => setHoveredConnectionId(conn.id)}
             onMouseLeave={() => setHoveredConnectionId(null)}
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               onConnectionClick(conn.id);
             }}
