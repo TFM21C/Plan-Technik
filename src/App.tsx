@@ -41,6 +41,8 @@ export default function App() {
     switch (type) {
       case ComponentType.NormallyOpen:
       case ComponentType.NormallyClosed:
+      case ComponentType.PushbuttonNO:
+      case ComponentType.PushbuttonNC:
         return [
           { id: `${componentId}-p1`, componentId, label: '1', position: { x: 10, y: 0 } },
           { id: `${componentId}-p2`, componentId, label: '2', position: { x: 10, y: 40 } },
@@ -51,6 +53,19 @@ export default function App() {
           { id: `${componentId}-p1`, componentId, label: 'A1', position: { x: 20, y: 2 } },
           { id: `${componentId}-p2`, componentId, label: 'A2', position: { x: 20, y: 38 } },
         ];
+      case ComponentType.PowerSource24V:
+      case ComponentType.PowerSource0V:
+        return Array.from({ length: 15 }, (_, i) => ({
+          id: `${componentId}-p${i}`,
+          componentId,
+          label: '',
+          position: { x: 50 + i * 25, y: 0 },
+        }));
+      case ComponentType.Coil:
+        return [
+          { id: `${componentId}-p1`, componentId, label: 'A1', position: { x: 20, y: 5 } },
+          { id: `${componentId}-p2`, componentId, label: 'A2', position: { x: 20, y: 25 } },
+        ];
       default:
         return [];
     }
@@ -59,15 +74,15 @@ export default function App() {
   const handleAddComponent = (type: ComponentType) => {
     const newId = `${type.toLowerCase()}-${Date.now()}`;
     const pins = createPinsForComponent(newId, type);
-    let initialState = {} as any; // Standardmäßig leerer Zustand
-    // NEU: Setze den Anfangszustand für Schalter
-    if (type === ComponentType.NormallyOpen) {
+    let initialState = {} as any;
+    if (type === ComponentType.NormallyOpen || type === ComponentType.PushbuttonNO) {
       initialState = { isOpen: true };
-    } else if (type === ComponentType.NormallyClosed) {
+    } else if (type === ComponentType.NormallyClosed || type === ComponentType.PushbuttonNC) {
       initialState = { isOpen: false };
     }
     const newComponent: CircuitComponent = { id: newId, type, label: newId, position: { x: 150, y: 150 }, pins, state: initialState };
     setState(prevState => ({ ...prevState, components: { ...prevState.components, [newId]: newComponent } }));
+    setSelectedComponentId(newId);
   };
 
   const getCoordsInSvg = (e: React.MouseEvent): { x: number; y: number } => {
@@ -118,7 +133,10 @@ export default function App() {
     if (!connectingInfo.startPinId) {
       setConnectingInfo({ startPinId: pinId });
     } else {
-      if (connectingInfo.startPinId === pinId) return;
+      if (connectingInfo.startPinId === pinId) {
+        setConnectingInfo({ startPinId: null });
+        return;
+      }
       const newConnectionId = `conn-${connectingInfo.startPinId}-${pinId}`;
       setState(prevState => ({ ...prevState, connections: { ...prevState.connections, [newConnectionId]: { id: newConnectionId, startPinId: connectingInfo.startPinId!, endPinId: pinId } } }));
       setConnectingInfo({ startPinId: null });
@@ -171,6 +189,21 @@ export default function App() {
     });
   };
 
+  const handlePinLabelChange = (pinId: string, newLabel: string) => {
+    setState(prevState => {
+      const componentId = pinId.split('-p')[0];
+      const component = prevState.components[componentId];
+      if (!component) return prevState;
+
+      const updatedPins = component.pins.map(pin =>
+        pin.id === pinId ? { ...pin, label: newLabel } : pin
+      );
+      const updatedComponent = { ...component, pins: updatedPins };
+
+      return { ...prevState, components: { ...prevState.components, [componentId]: updatedComponent } };
+    });
+  };
+
   const getConnectingInfoForCanvas = () => {
     if (!connectingInfo.startPinId) return null;
     const startPin = Object.values(state.components).flatMap(c => c.pins).find(p => p.id === connectingInfo.startPinId);
@@ -204,11 +237,12 @@ export default function App() {
       </main>
       {/* Detail-Seitenleiste im Simulationsmodus ausblenden */}
       {!isSimulating && (
-        <DetailsSidebar 
+        <DetailsSidebar
           selectedComponent={selectedComponentId ? state.components[selectedComponentId] : null}
           onDelete={handleDeleteComponent}
           onClose={() => setSelectedComponentId(null)}
           onLabelChange={handleLabelChange}
+          onPinLabelChange={handlePinLabelChange}
         />
       )}
     </div>
