@@ -66,6 +66,12 @@ export default function App() {
   const handleToggleSimulation = () => { setIsSimulating(prev => !prev); setSelectedComponentId(null); };
   const handleComponentClick = (e: React.MouseEvent, componentId: string) => { if (!isSimulating) { setSelectedComponentId(componentId); return; } e.stopPropagation(); const component = state.components[componentId]; const typesToToggle = [ComponentType.NormallyOpen, ComponentType.NormallyClosed, ComponentType.PushbuttonNO, ComponentType.PushbuttonNC]; if (typesToToggle.includes(component.type)) { setState(prevState => { const currentComp = prevState.components[componentId]; const newCompState = { ...currentComp.state, isOpen: !currentComp.state?.isOpen }; return { ...prevState, components: { ...prevState.components, [componentId]: { ...currentComp, state: newCompState } } }; }); } };
   const handleDeleteComponent = (componentId: string) => { setState(prevState => { const { [componentId]: _, ...restComponents } = prevState.components; const componentPins = new Set(prevState.components[componentId]?.pins.map(p => p.id) || []); const newConnections = Object.fromEntries(Object.entries(prevState.connections).filter(([, conn]) => !componentPins.has(conn.startPinId) && !componentPins.has(conn.endPinId))); return { components: restComponents, connections: newConnections }; }); setSelectedComponentId(null); };
+  const handleDeleteConnection = (connectionId: string) => {
+    setState(prevState => {
+      const { [connectionId]: _, ...rest } = prevState.connections;
+      return { ...prevState, connections: rest };
+    });
+  };
   const handleLabelChange = (componentId: string, newLabel: string) => { setState(prevState => { if (!prevState.components[componentId]) return prevState; const updatedComponent = { ...prevState.components[componentId], label: newLabel }; return { ...prevState, components: { ...prevState.components, [componentId]: updatedComponent } }; }); };
   const getConnectingInfoForCanvas = () => { if (!connectingInfo.startPinId) return null; const startPin = Object.values(state.components).flatMap(c => c.pins).find(p => p.id === connectingInfo.startPinId); if (!startPin) return null; return { startPin, mousePosition }; };
 
@@ -75,7 +81,20 @@ export default function App() {
         <Palette onAddComponent={handleAddComponent} onToggleSimulation={handleToggleSimulation} isSimulating={isSimulating} />
       </aside>
       <main className="canvas-container">
-        <CircuitCanvas svgRef={svgRef} components={state.components} connections={state.connections} selectedComponentId={selectedComponentId} onComponentMouseDown={handleMouseDownOnComponent} onPinClick={handlePinClick} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onCanvasClick={handleCanvasClick} onComponentClick={handleComponentClick} connectingInfo={getConnectingInfoForCanvas()} />
+        <CircuitCanvas
+          svgRef={svgRef}
+          components={state.components}
+          connections={state.connections}
+          selectedComponentId={selectedComponentId}
+          onComponentMouseDown={handleMouseDownOnComponent}
+          onPinClick={handlePinClick}
+          onComponentClick={handleComponentClick}
+          onConnectionClick={handleDeleteConnection}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onCanvasClick={handleCanvasClick}
+          connectingInfo={getConnectingInfoForCanvas()}
+        />
       </main>
       {!isSimulating && (
         <DetailsSidebar selectedComponent={selectedComponentId ? state.components[selectedComponentId] : null} onDelete={handleDeleteComponent} onClose={() => setSelectedComponentId(null)} onLabelChange={handleLabelChange} onPinLabelChange={handlePinLabelChange} />
