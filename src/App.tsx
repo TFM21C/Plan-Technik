@@ -27,7 +27,7 @@ export default function App() {
       },
       connections: {},
     });
-  }, [setState]);
+  }, []);
 
   const createPinsForComponent = (componentId: string, type: ComponentType): Pin[] => {
     switch (type) {
@@ -51,7 +51,7 @@ export default function App() {
     let initialState = {};
     if (type === ComponentType.NormallyOpen || type === ComponentType.PushbuttonNO) { initialState = { isOpen: true }; }
     else if (type === ComponentType.NormallyClosed || type === ComponentType.PushbuttonNC) { initialState = { isOpen: false }; }
-    const newComponent: CircuitComponent = { id: newId, type, label: `-${type.charAt(0)}${state.components.length+1}`, position: { x: 150, y: 150 }, pins, state: initialState };
+    const newComponent: CircuitComponent = { id: newId, type, label: `-${type.charAt(0)}${Object.keys(state.components).length + 1}`, position: { x: 150, y: 150 }, pins, state: initialState };
     setState(prevState => ({ ...prevState, components: { ...prevState.components, [newId]: newComponent } }));
     setSelectedComponentId(newId);
   };
