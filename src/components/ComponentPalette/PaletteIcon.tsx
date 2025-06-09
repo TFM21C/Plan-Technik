@@ -13,11 +13,13 @@ const PaletteIcon: React.FC<PaletteIconProps> = ({ type }) => {
   const getIcon = () => {
     switch (type) {
       case ComponentType.NormallyOpen:
-      case ComponentType.PushbuttonNO:
         return <g><line x1="16" y1="4" x2="16" y2="12" style={style} /><line x1="16" y1="20" x2="16" y2="28" style={style} /><line x1="12" y1="12" x2="20" y2="20" style={style} /></g>;
       case ComponentType.NormallyClosed:
-      case ComponentType.PushbuttonNC:
         return <g><line x1="16" y1="4" x2="16" y2="12" style={style} /><line x1="16" y1="20" x2="16" y2="28" style={style} /><line x1="12" y1="20" x2="20" y2="12" style={style} /></g>;
+      case ComponentType.PushbuttonNO:
+        return <g><path d="M 16 4 V 12" style={style} /><line x1="16" y1="20" x2="16" y2="28" style={style} /><line x1="12" y1="12" x2="20" y2="20" style={style} /><path d="M 12 4 L 20 4" style={style} /></g>;
+      case ComponentType.PushbuttonNC:
+        return <g><path d="M 16 4 V 12" style={style} /><line x1="16" y1="20" x2="16" y2="28" style={style} /><line x1="12" y1="20" x2="20" y2="12" style={style} /><path d="M 12 4 L 20 4" style={style} /></g>;
       case ComponentType.Coil:
         return <rect x="8" y="6" width="16" height="20" style={style} />;
       case ComponentType.Lamp:
